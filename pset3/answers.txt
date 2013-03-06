@@ -1,0 +1,36 @@
+3.4
+a. It is much more difficult to debug an application using kons. For instance, suppose some potentially buggy aggregation code (i.e. any code at all) is computing a summary of some data. The list (summary) is stored for a while and passed to some UI code, where certain parts of the summary are displayed. It is possible that the UI can crash/display faulty data due to bugs in the aggregation code, and the programmer/user would only be aware of the buggy code if s/he happens to view the specific piece of data that uses that code. This is much more difficult to debug than if cons were used.
+
+b. We get "Unbound variable: dy". This is because dy has not defined yet. The stream-procedure definitions should declare their arguments as lazy so they will not be evaluated (and thus throw an error) until needed.
+
+
+3.5
+a. Memoizing would break anything that changes dynamically, e.g. trying to use this data structure to read from a block of shared memory. Memoizing also introduces some overhead, which would not be necessary if, for instance, you knew you only had to traverse a list once and could throw away all values you'd already seen.
+b. We need environment information that thisform does not provide, but kons.scm does.
+c. See (a). Also, replacing cons with kons would make it much more difficult to do any pre-computation on a list of data. In certain performace-critical applications, it is vital that the program have immediate access to pre-computed values, and any value stored with kons may require a non-negligible amount of computaion on first access.
+
+3.6
+I built a simple type system (at the bottom of general-procedures.scm) that supports int, float, bool, and string types.
+
+A few examples:
+
+eval> ((lambda ((x string)) x) 6)
+
+;Operand not a string:  6
+;To continue, call RESTART with an option number:
+; (RESTART 1) => Return to read-eval-print level 1.
+
+
+
+eval> ((lambda ((x string)) x) "Whatup 6.945")
+"Whatup 6.945"
+
+
+
+eval> ((lambda ((x float)) x) 5.6)
+5.6
+
+
+
+eval> ((lambda ((x float)) x) 4/6)
+2/3
