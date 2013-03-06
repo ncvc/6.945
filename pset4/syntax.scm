@@ -152,10 +152,92 @@
 (define (let-body let-exp) (sequence->begin (cddr let-exp)))
 (define (let->combination let-exp)
   (let ((names (let-bound-variables let-exp))
-	(values (let-values let-exp))
-	(body (let-body let-exp)))
+  (values (let-values let-exp))
+  (body (let-body let-exp)))
     (cons (list 'LAMBDA names body)
-	  values)))
+    values)))
+
+;;; INFIX expressions
+
+(define (infix? exp) (tagged-list? exp 'infix))
+; (define (let-bound-variables let-exp)
+;   (map car (cadr let-exp)))
+; (define (let-values let-exp) (map cadr (cadr let-exp)))
+; (define (let-body let-exp) (sequence->begin (cddr let-exp)))
+(define (infix-get-parens exp i first-paren open-parens)
+  (cond
+    ((>= i (string-length exp))
+      -1)
+    ((char=? (string-ref exp i) #\()
+      (infix-get-parens exp (+ i 1) (if (eq? first-paren -1) i first-paren) (+ open-parens 1)))
+    ((char=? (string-ref exp i) #\))
+      (if (eq? open-parens 1)
+        (list first-paren i)
+        (infix-get-parens exp (+ i 1) first-paren (- open-parens 1))))
+    (else
+      (infix-get-parens exp (+ i 1) first-paren open-parens))))
+
+(define (infix-str->scheme infix-str)
+  (let ((number (string->number infix-str))
+        (parens (infix-get-parens infix-str 0 -1 0))
+        (addition (string-search-forward "+" infix-str))
+        (subtraction (string-search-forward "-" infix-str))
+        (multiplication (string-search-forward "*" infix-str))
+        (division (string-search-forward "/" infix-str))
+        (exponentiation (string-search-forward "^" infix-str))
+        (squareroot (string-search-forward "sqrt" infix-str)))
+    (newline)
+    (display infix-str)
+    (newline)
+    (display parens)
+    (cond
+      ((not (eq? number #f))
+        (display "num")
+        number)
+      ((list? parens)
+        (display "parens")
+        (let ((i (car parens)) (j (cadr parens)))
+          (list
+            (infix-str->scheme (string-head infix-str i))
+            (infix-str->scheme (substring infix-str (+ i 1) j))
+            (string-tail infix-str (+ j 1)))))
+      (addition
+        (display "add")
+        (list '+ (infix-str->scheme (string-head infix-str addition))
+                 (infix-str->scheme (string-tail infix-str (+ addition 1)))))
+      (subtraction
+        (display "sub")
+        (list '- (infix-str->scheme (string-head infix-str subtraction))
+                 (infix-str->scheme (string-tail infix-str (+ subtraction 1)))))
+      (multiplication
+        (display "mult")
+        (list '* (infix-str->scheme (string-head infix-str multiplication))
+                 (infix-str->scheme (string-tail infix-str (+ multiplication 1)))))
+      (division
+        (display "div")
+        (list '/ (infix-str->scheme (string-head infix-str division))
+                 (infix-str->scheme (string-tail infix-str (+ division 1)))))
+      (exponentiation
+        (display "expt")
+        (list 'expt (infix-str->scheme (string-head infix-str exponentiation))
+                    (infix-str->scheme (string-tail infix-str (+ exponentiation 1)))))
+      (squareroot
+        (display "sqrt")
+        (list 'sqrt (infix-str->scheme (string-tail infix-str (+ squareroot 4)))))
+      (else
+        (string->symbol infix-str)))))
+  ; (let ((names (let-bound-variables let-exp))
+  ; (values (let-values let-exp))
+  ; (body (let-body let-exp)))
+  ;   (cons (list 'LAMBDA names body)
+  ;   values)))
+
+(define (infix->scheme infix-exp)
+  (display (infix-str->scheme (cadr infix-exp)))
+  (newline)
+  (newline)
+  (newline)
+  (infix-str->scheme (cadr infix-exp)))
 
 ;;; Procedure applications -- NO-ARGS? and LAST-OPERAND? added
 

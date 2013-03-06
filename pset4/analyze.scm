@@ -69,11 +69,20 @@
 
 (defhandler execute-application
   (lambda (proc args)
+    (let
+      ((modded-args
+        (if (list? (procedure-parameters proc))
+          args
+          (list args)))
+      (modded-params
+        (if (list? (procedure-parameters proc))
+          (procedure-parameters proc)
+          (list (procedure-parameters proc)))))
     ((procedure-body proc)
      (extend-environment 
-      (procedure-parameters proc)
-      args
-      (procedure-environment proc))))
+      modded-params
+      modded-args
+      (procedure-environment proc)))))
   compound-procedure?)
 
 (define (analyze-sequence exps)
@@ -118,3 +127,5 @@
 (defhandler analyze (compose analyze cond->if) cond?)
 
 (defhandler analyze (compose analyze let->combination) let?)
+
+(defhandler analyze (compose analyze infix->scheme) infix?)
