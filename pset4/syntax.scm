@@ -31,7 +31,7 @@
 ;;; Assignment--- SET!
 
 (define (assignment? exp) (tagged-list? exp 'set!))
-(define (permanent-assignment? exp) (tagged-list? exp 'set!!))
+(define (permanent-assignment? exp) (tagged-list? exp 'permanent-set!))
 
 (define (assignment-variable assn) (cadr  assn))
 (define (assignment-value    assn) (caddr assn))
@@ -270,3 +270,10 @@
 
 (define (amb-alternatives exp) (cdr exp))
 
+
+
+(define (if-fail? exp) (tagged-list? exp 'if-fail))
+
+(define (if-fail-proc exp) (cadr exp))
+
+(define (if-fail-failure exp) (caddr exp))

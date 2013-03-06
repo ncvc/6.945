@@ -48,11 +48,11 @@
         (aproc (analyze (if-alternative exp))))
     (lambda (env succeed fail)
       (pproc env
-	     (lambda (pred-value pred-fail)
-	       (if (true? pred-value)
-		   (cproc env succeed pred-fail)
-		   (aproc env succeed pred-fail)))
-	     fail))))
+       (lambda (pred-value pred-fail)
+         (if (true? pred-value)
+       (cproc env succeed pred-fail)
+       (aproc env succeed pred-fail)))
+       fail))))
 
 (defhandler analyze analyze-if if?)
 
@@ -138,18 +138,32 @@
         (vproc (analyze (assignment-value exp))))
     (lambda (env succeed fail)
       (vproc env
-	     (lambda (new-val val-fail)
-	       (let ((old-val (lookup-variable-value var env)))
-		 (set-variable-value! var new-val env)
-		 (succeed 'OK
-		   (lambda ()
-		     (set-variable-value! var old-val env)
-		     (val-fail)))))
-	     fail))))
+       (lambda (new-val val-fail)
+         (let ((old-val (lookup-variable-value var env)))
+     (set-variable-value! var new-val env)
+     (succeed 'OK
+       (lambda ()
+         (set-variable-value! var old-val env)
+         (val-fail)))))
+       fail))))
 
 (defhandler analyze
   analyze-undoable-assignment
   assignment?)
+
+(define (analyze-permanent-assignment exp)
+  (let ((var (assignment-variable exp))
+        (vproc (analyze (assignment-value exp))))
+    (lambda (env succeed fail)
+      (vproc env
+        (lambda (new-val val-fail)
+          (set-variable-value! var new-val env)
+          (succeed 'OK val-fail))
+        fail))))
+
+(defhandler analyze
+  analyze-permanent-assignment
+  permanent-assignment?)
 
 (define (analyze-definition exp)
   (let ((var (definition-variable exp))
@@ -191,3 +205,16 @@
   (lambda (exp)
     (analyze (let->combination exp)))
   let?)
+
+
+
+(define (analyze-if-fail exp)
+  (let ((proc    (analyze (if-fail-proc exp)))
+        (failure (analyze (if-fail-failure exp))))
+    (lambda (env succeed fail)
+      (proc env
+        succeed
+        (lambda ()
+          (failure env succeed fail))))))
+
+(defhandler analyze analyze-if-fail if-fail?)
