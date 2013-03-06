@@ -2,7 +2,6 @@
 Code in analyze.scm
 
 Test output:
-
 eval> ((lambda x (map square x)) 1 2 3 4)
 (1 4 9 16)
 
@@ -18,11 +17,28 @@ eval> (ss 1 2 3 4)
 
 
 ============ 4.2 ============
-(infix "4*(5+3)*2")
+Code in analyze.scm
 
-(define (quadratic a b c)
+Test output:
+eval> (infix "4+2")
+6
+
+eval> (infix "4*5+3*2")
+26
+
+eval> (infix "4*(5+3)*2")
+64
+
+eval> (infix "((3+4))")
+7
+
+eval> (define (quadratic a b c)
   (let ((discriminant (infix "b^2-4*a*c")))
     (infix "(-b+sqrt(discriminant))/(2*a)")))
+ok
+
+eval> (quadratic 1 3 -4)
+1
 
 
 
@@ -51,7 +67,8 @@ Modified procedure:
 Number of solutions: 5
 
 4.39
-Yes, order does matter. 
+The order does not effect the answer, since the same constraints are being used. The same nodes in the search tree are explored, since at each step, the same rules are being checked and the nodes are walked in the same order.
+However, there is a possibility for a constant time speedup. This is because each rule must be evaluated until one fails (or they all succeed) at each step. Thus it would be beneficial to put inexpensive rules that fail often near the beginning, to avoid evaluating the more expensive or more successful rules.
 
 4.40
 Number of assignments before distinct requirement: 5^5 = 3125
