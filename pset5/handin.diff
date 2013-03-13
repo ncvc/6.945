@@ -1,0 +1,316 @@
+diff --git a/pset5/answers.txt b/pset5/answers.txt
+new file mode 100644
+index 0000000..5a42e36
+--- /dev/null
++++ b/pset5/answers.txt
+@@ -0,0 +1,60 @@
++5.1
++Each match combinator requires that the arguments match, as well as that the success procedure returns true. If either one of these requirements fails, it behaves in the same way - it returns false and the system will try the next option. Thus, by always returning false, the success procedure ensures that all options will be exhausted.
++
++
++
++5.2
++Sample output:
++
++1 ]=> ((match:->combinators '(?:choice a b (? x) c))
++ 'z '()
++ (lambda (d) `(succeed ,d)))
++success: (succeed ((x z)))
++;Value 11: (succeed ((x z)))
++
++1 ]=> ((match:->combinators
++ `((? y) (?:choice a b (? x ,string?) (? y ,symbol?) c)))
++ '(z z) '()
++ (lambda (d) `(succeed ,d)))
++success: (succeed ((y z)))
++;Value 12: (succeed ((y z)))
++
++1 ]=> ((match:->combinators `(?:choice b (? x ,symbol?)))
++  'b '()
++  (lambda (x)
++    (pp `(succeed ,x))
++    #f))
++(succeed ())
++(succeed ((x b)))
++;Value: #f
++
++
++
++5.3
++Sample output:
++1 ]=> ((match:->combinators '(?:pletrec ((odd-even-etc (?:choice () ((? b) (?:ref even-odd-etc)))) (even-odd-etc (?:choice () ((? a) (?:ref odd-even-etc))))) (?:ref odd-even-etc))) '(1 (2 (1 (2 ())))) '() (lambda (d) `(succeed ,d)))
++
++;Value 11: (succeed ((a 2) (b 1)))
++
++1 ]=> ((match:->combinators '(?:pletrec ((odd-even-etc (?:choice () ((? b) (?:ref even-odd-etc)))) (even-odd-etc (?:choice () ((? a) (?:ref odd-even-etc))))) (?:ref odd-even-etc))) '(1 (2 (1 (2 (s))))) '() (lambda (d) `(succeed ,d)))
++
++;Value: #f
++
++1 ]=> ((match:->combinators '(?:pletrec ((odd-even-etc (?:choice () (1 (?:ref even-odd-etc)))) (even-odd-etc (?:choice () (2 (?:ref odd-even-etc))))) (?:ref odd-even-etc))) '(1 (2 (1 (2 ())))) '() (lambda (d) `(succeed ,d)))
++
++;Value 12: (succeed ())
++
++
++
++5.4
++expr<? ensures that a and b only get swapped if a < b. If a and b are of the same types, the standard ordering is used. Otherwise, the ordering is as follows: null < number < symbol < list. By imposing a strict ordering, the commutitive rule can ensure that it only swaps in one direction. That is, it will only swap a and b, but not b and a, for instance. This ensures that the system does not keep swapping back and forth between the two and only tries each one time, preventing a potential infinite recursion.
++
++
++
++5.5
++The ordering forces all the numerical values to the left side of the expression. This allows for numerical simplification without segment variables in between the numbers, which greatly reduces the number of branches it needs to explore. Only one segment variable is necessary per numerical simplification rule.
++
++
++
++5.6
++Yes, it would require parsing each expression and explicitly performing a sort routine on each expression and subexpression, using expr<? as the sort method. This would allow for a n*log(n) sort for each sum and product, which is a drastic improvement for larger problems.
+diff --git a/pset5/matcher.scm b/pset5/matcher.scm
+index c3bcbd9..c929e92 100644
+--- a/pset5/matcher.scm
++++ b/pset5/matcher.scm
+@@ -92,27 +92,69 @@
+ (define (match:list . match-combinators)
+   (define (list-match data dictionary succeed)
+     (let lp ((data data)
+-	     (matchers match-combinators)
+-	     (dictionary dictionary))
++       (matchers match-combinators)
++       (dictionary dictionary))
+       (define (try-element submatcher)
+-	(submatcher (car data) dictionary
+-	  (lambda (new-dictionary)
+-	    (lp (cdr data) (cdr matchers) new-dictionary))))
++  (submatcher (car data) dictionary
++    (lambda (new-dictionary)
++      (lp (cdr data) (cdr matchers) new-dictionary))))
+       (define (try-segment submatcher)
+-	(submatcher data dictionary
++  (submatcher data dictionary
+           (lambda (new-dictionary n)
+-	    (if (> n (length data))
+-		(error "Matcher ate too much." n))
+-	    (lp (list-tail data n) (cdr matchers) new-dictionary))))
++      (if (> n (length data))
++    (error "Matcher ate too much." n))
++      (lp (list-tail data n) (cdr matchers) new-dictionary))))
+       (cond ((pair? matchers)
+-	     (if (segment-matcher? (car matchers))
+-		 (try-segment (car matchers))
+-		 (and (pair? data) (try-element (car matchers)))))
+-	    ((pair? data) #f)
+-	    ((null? data)
+-	     (succeed dictionary))
+-	    (else #f))))
++       (if (segment-matcher? (car matchers))
++     (try-segment (car matchers))
++     (and (pair? data) (try-element (car matchers)))))
++      ((pair? data) #f)
++      ((null? data)
++       (succeed dictionary))
++      (else #f))))
+   list-match)
++
++(define (match:choice . match-combinators)
++  (define (choice-match data dictionary succeed)
++    (let lp ((data data)
++             (matchers match-combinators)
++             (dictionary dictionary))
++      (cond
++        ((pair? matchers)
++          (let ((success ((car matchers) data dictionary succeed)))
++            (if success
++              success
++              (lp data (cdr matchers) dictionary))))
++        ((pair? data)
++          #f)
++        ((null? data)
++          (succeed dictionary))
++        (else
++          #f))))
++  choice-match)
++
++(define named-bindings (make-eq-hash-table))
++
++(define (match:pletrec bindings body)
++  (define (pletrec-match data dictionary succeed)
++    (define (bindings->dict hash-table bindings-list)
++      (cond
++        ((eq? (length bindings-list) 0)
++          hash-table)
++        (else
++          (hash-table/put! hash-table (caar bindings-list) (cadar bindings-list))
++          (bindings->dict hash-table (cdr bindings-list)))))
++
++    (set! named-bindings (bindings->dict named-bindings bindings))
++
++    ((match:->combinators body) data dictionary succeed))
++  pletrec-match)
++
++(define (match:ref pattern)
++  (define (ref-match data dictionary succeed)
++    ((match:->combinators (hash-table/get named-bindings (cadr pattern) 0)) data dictionary succeed))
++  ref-match)
++
+ 
+ ;;; Sticky notes
+ 
+@@ -139,6 +181,18 @@
+        (or (null? pattern)
+ 	   (not (memq (car pattern) '(? ??))))))
+ 
++(define (match:choice? pattern)
++  (and (pair? pattern)
++       (eq? (car pattern) '?:choice)))
++
++(define (match:pletrec? pattern)
++  (and (pair? pattern)
++       (eq? (car pattern) '?:pletrec)))
++
++(define (match:ref? pattern)
++  (and (pair? pattern)
++       (eq? (car pattern) '?:ref)))
++
+ (define match:->combinators
+   (make-generic-operator 1 'eqv match:eqv))
+ 
+@@ -158,6 +212,21 @@
+     (apply match:list (map match:->combinators pattern)))
+   match:list?)
+ 
++(defhandler match:->combinators
++  (lambda (pattern)
++    (apply match:choice (map match:->combinators pattern)))
++  match:choice?)
++
++(defhandler match:->combinators
++  (lambda (pattern)
++    (match:pletrec (cadr pattern) (caddr pattern)))
++  match:pletrec?)
++
++(defhandler match:->combinators
++  (lambda (pattern)
++    (match:ref pattern))
++  match:ref?)
++
+ (define (matcher pattern)
+   (let ((match-combinator (match:->combinators pattern)))
+     (lambda (datum)
+diff --git a/pset5/rules.scm b/pset5/rules.scm
+index 582795f..48cf424 100644
+--- a/pset5/rules.scm
++++ b/pset5/rules.scm
+@@ -29,18 +29,21 @@
+ 
+ (define expr<?
+   (make-entity
+-   (lambda (self x y)
+-     (let per-type ((types (entity-extra self)))
+-       (if (null? types)
+-	   (error "Unknown expression type -- expr<?" x y)
+-	   (let ((predicate? (caar types))
+-		 (comparator (cdar types)))
+-	     (cond ((predicate? x)
+-		    (if (predicate? y)
+-			(comparator x y)
+-			#t))
+-		   ((predicate? y) #f)
+-		   (else (per-type (cdr types))))))))
++    (lambda (self x y)
++      (let per-type ((types (entity-extra self)))
++        (if (null? types)
++	        (error "Unknown expression type -- expr<?" x y)
++	        (let ((predicate? (caar types))
++		            (comparator (cdar types)))
++	          (cond
++              ((predicate? x)
++		            (if (predicate? y)
++			            (comparator x y)
++			            #t))
++		          ((predicate? y)
++                #f)
++		          (else
++                (per-type (cdr types))))))))
+    `((,null?   . ,(lambda (x y) #f))
+      (,number? . ,<)
+      (,symbol? . ,symbol<?)
+@@ -108,3 +111,80 @@
+  (algebra-2 '(+ (* 3 (+ x 1)) -3))
+  ;Value: (* 3 x)
+ |#
++
++
++;; 5.7
++
++(define algebra-3
++  (rule-simplifier
++   (list
++
++    ;; Sums
++
++    (rule `(+ (? a)) a)
++
++    (rule `(+ (?? a) (+ (?? b)) (?? c))
++    `(+ ,@a ,@b ,@c))
++
++    (rule `(+ (?? a) (? y) (? x) (?? b))
++    (and (expr<? x y)
++         `(+ ,@a ,x ,y ,@b)))
++    
++
++    ;; Products
++
++    (rule `(* (? a)) a)
++
++    (rule `(* (?? a) (* (?? b)) (?? c))
++    `(* ,@a ,@b ,@c))
++
++    (rule `(* (?? a) (? y) (? x) (?? b))
++    (and (expr<? x y)
++         `(* ,@a ,x ,y ,@b)))
++
++
++    ;; Numerical simplifications below
++
++    (rule `(+ 0 (?? x)) `(+ ,@x))
++
++    (rule `(+ (? x ,number?) (? y ,number?) (?? z))
++    `(+ ,(+ x y) ,@z))
++
++
++    (rule `(* 0 (?? x)) 0)
++     
++    (rule `(* 1 (?? x)) `(* ,@x))
++
++    (rule `(* (? x ,number?) (? y ,number?) (?? z))
++      `(* ,(* x y) ,@z))
++
++
++    ;; Distributive law
++
++    (rule `(* (?? a) (+ (?? b)) (?? c))
++    `(+ ,@(map (lambda (x) `(* ,@a ,x ,@c)) b)))
++
++
++    ;; Like-term collection
++
++    (rule `(+ (?? a)   (? b)   (?? c)   (? b)   (?? d))
++      `(+ (* 2 ,b) ,@a ,@c ,@d))
++
++    (rule `(+ (?? a)   (* (? e ,number?) (?? b))   (?? c)   (?? b)   (?? d))
++      `(+ (* (+ 1 ,e) ,@b) ,@a ,@c ,@d))
++
++    (rule `(+ (?? a)   (?? b)   (?? c)   (* (? e ,number?) (?? b))   (?? d))
++      `(+ (* (+ 1 ,e) ,@b) ,@a ,@c ,@d))
++
++    (rule `(+ (?? a)   (* (? e ,number?) (?? b))   (?? c)   (* (? f ,number?) (?? b))   (?? d))
++      `(+ (* (+ ,e ,f) ,@b) ,@a ,@c ,@d))
++
++    )))
++
++#|
++1 ]=> (algebra-3 '(+ y (* x -2 w) (* x 4 y) (* w x) z (* 5 z) (* x w) (* x y 3)))
++;Value 11: (+ y (* 6 z) (* 7 x y))
++
++1 ]=> (algebra-2 '(+ (* 4 x) (* 3 x)))
++;Value 12: (+ (* 3 x) (* 4 x))
++|#
