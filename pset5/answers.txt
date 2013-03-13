@@ -47,14 +47,14 @@ Sample output:
 
 
 5.4
-expr<? ensures that a and b only get swapped if a < b. If a and b are of the same types, the standard ordering is used. Otherwise, the ordering is as follows: null < number < symbol < list.
+expr<? ensures that a and b only get swapped if a < b. If a and b are of the same types, the standard ordering is used. Otherwise, the ordering is as follows: null < number < symbol < list. By imposing a strict ordering, the commutitive rule can ensure that it only swaps in one direction. That is, it will only swap a and b, but not b and a, for instance. This ensures that the system does not keep swapping back and forth between the two and only tries each one time, preventing a potential infinite recursion.
 
 
 
 5.5
-wat
+The ordering forces all the numerical values to the left side of the expression. This allows for numerical simplification without segment variables in between the numbers, which greatly reduces the number of branches it needs to explore. Only one segment variable is necessary per numerical simplification rule.
 
 
 
 5.6
-wat as well
+Yes, it would require parsing each expression and explicitly performing a sort routine on each expression and subexpression, using expr<? as the sort method. This would allow for a n*log(n) sort for each sum and product, which is a drastic improvement for larger problems.
