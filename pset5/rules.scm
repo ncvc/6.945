@@ -29,18 +29,21 @@
 
 (define expr<?
   (make-entity
-   (lambda (self x y)
-     (let per-type ((types (entity-extra self)))
-       (if (null? types)
-	   (error "Unknown expression type -- expr<?" x y)
-	   (let ((predicate? (caar types))
-		 (comparator (cdar types)))
-	     (cond ((predicate? x)
-		    (if (predicate? y)
-			(comparator x y)
-			#t))
-		   ((predicate? y) #f)
-		   (else (per-type (cdr types))))))))
+    (lambda (self x y)
+      (let per-type ((types (entity-extra self)))
+        (if (null? types)
+	        (error "Unknown expression type -- expr<?" x y)
+	        (let ((predicate? (caar types))
+		            (comparator (cdar types)))
+	          (cond
+              ((predicate? x)
+		            (if (predicate? y)
+			            (comparator x y)
+			            #t))
+		          ((predicate? y)
+                #f)
+		          (else
+                (per-type (cdr types))))))))
    `((,null?   . ,(lambda (x y) #f))
      (,number? . ,<)
      (,symbol? . ,symbol<?)

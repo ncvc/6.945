@@ -43,3 +43,18 @@ Sample output:
 1 ]=> ((match:->combinators '(?:pletrec ((odd-even-etc (?:choice () (1 (?:ref even-odd-etc)))) (even-odd-etc (?:choice () (2 (?:ref odd-even-etc))))) (?:ref odd-even-etc))) '(1 (2 (1 (2 ())))) '() (lambda (d) `(succeed ,d)))
 
 ;Value 12: (succeed ())
+
+
+
+5.4
+expr<? ensures that a and b only get swapped if a < b. If a and b are of the same types, the standard ordering is used. Otherwise, the ordering is as follows: null < number < symbol < list.
+
+
+
+5.5
+wat
+
+
+
+5.6
+wat as well
