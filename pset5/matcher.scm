@@ -92,27 +92,47 @@
 (define (match:list . match-combinators)
   (define (list-match data dictionary succeed)
     (let lp ((data data)
-	     (matchers match-combinators)
-	     (dictionary dictionary))
+       (matchers match-combinators)
+       (dictionary dictionary))
       (define (try-element submatcher)
-	(submatcher (car data) dictionary
-	  (lambda (new-dictionary)
-	    (lp (cdr data) (cdr matchers) new-dictionary))))
+  (submatcher (car data) dictionary
+    (lambda (new-dictionary)
+      (lp (cdr data) (cdr matchers) new-dictionary))))
       (define (try-segment submatcher)
-	(submatcher data dictionary
+  (submatcher data dictionary
           (lambda (new-dictionary n)
-	    (if (> n (length data))
-		(error "Matcher ate too much." n))
-	    (lp (list-tail data n) (cdr matchers) new-dictionary))))
+      (if (> n (length data))
+    (error "Matcher ate too much." n))
+      (lp (list-tail data n) (cdr matchers) new-dictionary))))
       (cond ((pair? matchers)
-	     (if (segment-matcher? (car matchers))
-		 (try-segment (car matchers))
-		 (and (pair? data) (try-element (car matchers)))))
-	    ((pair? data) #f)
-	    ((null? data)
-	     (succeed dictionary))
-	    (else #f))))
+       (if (segment-matcher? (car matchers))
+     (try-segment (car matchers))
+     (and (pair? data) (try-element (car matchers)))))
+      ((pair? data) #f)
+      ((null? data)
+       (succeed dictionary))
+      (else #f))))
   list-match)
+
+(define (match:choice . match-combinators)
+  (define (choice-match data dictionary succeed)
+    (let lp ((data data)
+             (matchers match-combinators)
+             (dictionary dictionary))
+      (cond
+        ((pair? matchers)
+          (let ((success ((car matchers) data dictionary succeed)))
+            (if success
+              success
+              (lp data (cdr matchers) dictionary))))
+        ((pair? data)
+          #f)
+        ((null? data)
+          (succeed dictionary))
+        (else
+          #f))))
+  choice-match)
+
 
 ;;; Sticky notes
 
@@ -139,6 +159,10 @@
        (or (null? pattern)
 	   (not (memq (car pattern) '(? ??))))))
 
+(define (match:choice? pattern)
+  (and (pair? pattern)
+       (eq? (car pattern) '?:choice)))
+
 (define match:->combinators
   (make-generic-operator 1 'eqv match:eqv))
 
@@ -157,6 +181,11 @@
   (lambda (pattern)
     (apply match:list (map match:->combinators pattern)))
   match:list?)
+
+(defhandler match:->combinators
+  (lambda (pattern)
+    (apply match:choice (map match:->combinators pattern)))
+  match:choice?)
 
 (define (matcher pattern)
   (let ((match-combinator (match:->combinators pattern)))

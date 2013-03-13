@@ -1,0 +1,29 @@
+5.1
+Each match combinator requires that the arguments match, as well as that the success procedure returns true. If either one of these requirements fails, it behaves in the same way - it returns false and the system will try the next option. Thus, by always returning false, the success procedure ensures that all options will be exhausted.
+
+5.2
+Sample output:
+
+1 ]=> ((match:->combinators '(?:choice a b (? x) c))
+ 'z '()
+ (lambda (d) `(succeed ,d)))
+success: (succeed ((x z)))
+;Value 11: (succeed ((x z)))
+
+1 ]=> ((match:->combinators
+ `((? y) (?:choice a b (? x ,string?) (? y ,symbol?) c)))
+ '(z z) '()
+ (lambda (d) `(succeed ,d)))
+success: (succeed ((y z)))
+;Value 12: (succeed ((y z)))
+
+1 ]=> ((match:->combinators `(?:choice b (? x ,symbol?)))
+  'b '()
+  (lambda (x)
+    (pp `(succeed ,x))
+    #f))
+(succeed ())
+(succeed ((x b)))
+;Value: #f
+
+5.3
