@@ -133,6 +133,28 @@
           #f))))
   choice-match)
 
+(define named-bindings (make-eq-hash-table))
+
+(define (match:pletrec bindings body)
+  (define (pletrec-match data dictionary succeed)
+    (define (bindings->dict hash-table bindings-list)
+      (cond
+        ((eq? (length bindings-list) 0)
+          hash-table)
+        (else
+          (hash-table/put! hash-table (caar bindings-list) (cadar bindings-list))
+          (bindings->dict hash-table (cdr bindings-list)))))
+
+    (set! named-bindings (bindings->dict named-bindings bindings))
+
+    ((match:->combinators body) data dictionary succeed))
+  pletrec-match)
+
+(define (match:ref pattern)
+  (define (ref-match data dictionary succeed)
+    ((match:->combinators (hash-table/get named-bindings (cadr pattern) 0)) data dictionary succeed))
+  ref-match)
+
 
 ;;; Sticky notes
 
@@ -163,6 +185,14 @@
   (and (pair? pattern)
        (eq? (car pattern) '?:choice)))
 
+(define (match:pletrec? pattern)
+  (and (pair? pattern)
+       (eq? (car pattern) '?:pletrec)))
+
+(define (match:ref? pattern)
+  (and (pair? pattern)
+       (eq? (car pattern) '?:ref)))
+
 (define match:->combinators
   (make-generic-operator 1 'eqv match:eqv))
 
@@ -186,6 +216,16 @@
   (lambda (pattern)
     (apply match:choice (map match:->combinators pattern)))
   match:choice?)
+
+(defhandler match:->combinators
+  (lambda (pattern)
+    (match:pletrec (cadr pattern) (caddr pattern)))
+  match:pletrec?)
+
+(defhandler match:->combinators
+  (lambda (pattern)
+    (match:ref pattern))
+  match:ref?)
 
 (define (matcher pattern)
   (let ((match-combinator (match:->combinators pattern)))

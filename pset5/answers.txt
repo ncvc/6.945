@@ -1,6 +1,8 @@
 5.1
 Each match combinator requires that the arguments match, as well as that the success procedure returns true. If either one of these requirements fails, it behaves in the same way - it returns false and the system will try the next option. Thus, by always returning false, the success procedure ensures that all options will be exhausted.
 
+
+
 5.2
 Sample output:
 
@@ -26,4 +28,18 @@ success: (succeed ((y z)))
 (succeed ((x b)))
 ;Value: #f
 
+
+
 5.3
+Sample output:
+1 ]=> ((match:->combinators '(?:pletrec ((odd-even-etc (?:choice () ((? b) (?:ref even-odd-etc)))) (even-odd-etc (?:choice () ((? a) (?:ref odd-even-etc))))) (?:ref odd-even-etc))) '(1 (2 (1 (2 ())))) '() (lambda (d) `(succeed ,d)))
+
+;Value 11: (succeed ((a 2) (b 1)))
+
+1 ]=> ((match:->combinators '(?:pletrec ((odd-even-etc (?:choice () ((? b) (?:ref even-odd-etc)))) (even-odd-etc (?:choice () ((? a) (?:ref odd-even-etc))))) (?:ref odd-even-etc))) '(1 (2 (1 (2 (s))))) '() (lambda (d) `(succeed ,d)))
+
+;Value: #f
+
+1 ]=> ((match:->combinators '(?:pletrec ((odd-even-etc (?:choice () (1 (?:ref even-odd-etc)))) (even-odd-etc (?:choice () (2 (?:ref odd-even-etc))))) (?:ref odd-even-etc))) '(1 (2 (1 (2 ())))) '() (lambda (d) `(succeed ,d)))
+
+;Value 12: (succeed ())
