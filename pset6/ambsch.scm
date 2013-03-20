@@ -175,7 +175,7 @@
         (let ((z (amb #t #f)))
           (pp (list x y z)))))
     (amb)))
-#|
+
 #|
 ;; AX 1.d - Elementary backtrack test.  [Depth First]
 
@@ -277,13 +277,9 @@
 
 (define (a-pythagorean-triple-from low)
   (let ((i (an-integer-from low)))
-    (pp (list i))
     (let ((j (an-integer-from i)))
-    (pp (list i j))
       (let ((k (an-integer-from j)))
-    (pp (list i j k))
         (require (= (+ (* i i) (* j j)) (* k k)))
-        (display "SUCCESS")
         (list i j k)))))
 
 (define (require p)
@@ -336,11 +332,14 @@
 
 (define (a-pythagorean-triple-between low high)
   (let ((i (an-integer-between low high)))
+    (pp (list i))
     (let ((j (an-integer-between i high)))
+    (pp (list i j))
       (let ((k (an-integer-between j high)))
+    (pp (list i j k))
         (require (= (+ (* i i) (* j j)) (* k k)))
         (list i j k)))))
-|#
+
 
 (define (an-integer-between low high)
   (require (<= low high))
