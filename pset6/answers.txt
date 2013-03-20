@@ -88,3 +88,7 @@ Test cases:
 (1 a #f)
 (1 a #t)
 ;Value: #f
+
+
+6.5
+set! updates the value of an existing binding. Thus, for each amb, all possible values are cycled through and the variable is assigned with respect to all continuations, instead of just the current continuation as we expect. This results in the variable keeping it's last value for all continuations once amb is done looping through the possible values.
