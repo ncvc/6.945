@@ -8,4 +8,7 @@
 ;; AMB Examples from SICP
 (load "examples")
 
+;; pset problems
+(load "6.2.scm")
+
 ':have-fun!
