@@ -1,0 +1,90 @@
+6.3
+BFS will explore all nodes up until the depth of the first success, whereas DFS will only explore as many full paths as it takes to succeed. Since, in this case, the success depth
+
+6.4
+A
+We could use a random AMB to return a random word of the day from a given list of words
+
+B
+See ambsch.scm
+
+Test cases:
+1 ]=> (with-random-order-alternation
+  (lambda ()
+    (amb 'Muddledness 'Myofibrilla 'Congelifract 'Noncontextually 'Overphilosophize 'Deratizing 'Unascribed 'Arboresque)))
+;Value: deratizing
+
+
+1 ]=> (with-random-order-alternation elementary-backtrack-test)
+(2)
+(2 b)
+(2 b #f)
+(2 b #t)
+(2 a)
+(2 a #t)
+(2 a #f)
+(3)
+(3 a)
+(3 a #f)
+(3 a #t)
+(3 b)
+(3 b #f)
+(3 b #t)
+(1)
+(1 a)
+(1 a #t)
+(1 a #f)
+(1 b)
+(1 b #f)
+(1 b #t)
+;Value: #f
+
+
+1 ]=> (with-right-to-left-alternation elementary-backtrack-test)
+(1)
+(1 a)
+(1 a #t)
+(1 a #f)
+(1 b)
+(1 b #t)
+(1 b #f)
+(2)
+(2 a)
+(2 a #t)
+(2 a #f)
+(2 b)
+(2 b #t)
+(2 b #f)
+(3)
+(3 a)
+(3 a #t)
+(3 a #f)
+(3 b)
+(3 b #t)
+(3 b #f)
+;Value: #f
+
+
+1 ]=> (with-right-to-left-alternation elementary-backtrack-test)
+(3)
+(3 b)
+(3 b #f)
+(3 b #t)
+(3 a)
+(3 a #f)
+(3 a #t)
+(2)
+(2 b)
+(2 b #f)
+(2 b #t)
+(2 a)
+(2 a #f)
+(2 a #t)
+(1)
+(1 b)
+(1 b #f)
+(1 b #t)
+(1 a)
+(1 a #f)
+(1 a #t)
+;Value: #f

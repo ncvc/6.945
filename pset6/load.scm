@@ -9,6 +9,6 @@
 (load "examples")
 
 ;; pset problems
-(load "6.2.scm")
+; (load "6.4.scm")
 
 ':have-fun!

@@ -24,7 +24,7 @@
       (map (lambda (alternative)
              (lambda ()
                (within-continuation k alternative)))
-           alternatives))
+           (reorder-alternatives alternatives)))
      (yield))))
 
 
@@ -54,6 +54,48 @@
    (lambda () (undoer) (yield)))
   (doer))
 
+;;; 6.4.B Alternative reordering of alternatives wrappers
+(define (with-left-to-right-alternation thunk)
+  (call-with-current-continuation
+    (lambda (k)
+      (fluid-let ((reorder-alternatives reorder-alternatives-left-to-right-alternation)
+                  (*search-schedule* (empty-search-schedule))
+                  (*top-level* k))
+        (thunk)))))
+
+(define (with-right-to-left-alternation thunk)
+  (call-with-current-continuation
+    (lambda (k)
+      (fluid-let ((reorder-alternatives reorder-alternatives-right-to-left-alternation)
+                  (*search-schedule* (empty-search-schedule))
+                  (*top-level* k))
+        (thunk)))))
+
+(define (with-random-order-alternation thunk)
+  (call-with-current-continuation
+    (lambda (k)
+      (fluid-let ((reorder-alternatives reorder-alternatives-random-order-alternation)
+                  (*search-schedule* (empty-search-schedule))
+                  (*top-level* k))
+        (thunk)))))
+
+(define (reorder-alternatives-left-to-right-alternation alternatives)
+  alternatives)
+
+(define (reorder-alternatives-right-to-left-alternation alternatives)
+  (reverse alternatives))
+
+(define (reorder-alternatives-random-order-alternation alternatives)
+  (if (<= (length alternatives) 1)
+    alternatives
+    (let ((the-chosen-one (random (length alternatives))))
+      (cons (list-ref alternatives the-chosen-one)
+        (reorder-alternatives-random-order-alternation
+          (append (list-head alternatives the-chosen-one) (list-tail alternatives (+ the-chosen-one 1))))))))
+
+; default to left-to-right
+(define reorder-alternatives reorder-alternatives-left-to-right-alternation)
+
 ;;; Alternative search strategy wrappers
 
 (define (with-depth-first-schedule thunk)
@@ -122,7 +164,6 @@
 (define (require p)
   (if (not p) (amb)))
 
-#|
 ;;; AX 1 - Elementary backtrack test.
 
 (define elementary-backtrack-test
@@ -134,6 +175,7 @@
         (let ((z (amb #t #f)))
           (pp (list x y z)))))
     (amb)))
+#|
 #|
 ;; AX 1.d - Elementary backtrack test.  [Depth First]
 
@@ -235,9 +277,13 @@
 
 (define (a-pythagorean-triple-from low)
   (let ((i (an-integer-from low)))
+    (pp (list i))
     (let ((j (an-integer-from i)))
+    (pp (list i j))
       (let ((k (an-integer-from j)))
+    (pp (list i j k))
         (require (= (+ (* i i) (* j j)) (* k k)))
+        (display "SUCCESS")
         (list i j k)))))
 
 (define (require p)
