@@ -332,11 +332,8 @@
 
 (define (a-pythagorean-triple-between low high)
   (let ((i (an-integer-between low high)))
-    (pp (list i))
     (let ((j (an-integer-between i high)))
-    (pp (list i j))
       (let ((k (an-integer-between j high)))
-    (pp (list i j k))
         (require (= (+ (* i i) (* j j)) (* k k)))
         (list i j k)))))
 
