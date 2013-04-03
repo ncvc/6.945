@@ -132,4 +132,229 @@
     5 4 3 7 1 2 8 9 0))
 
 
-(sudoku-checker puzzle2)
+(sudoku-checker puzzle3)
+
+#|
+;puzzle1 output
+"Board"
+0 0 0 2 0 0 0 0 0 
+0 9 0 0 1 5 6 0 0 
+7 6 0 0 0 0 3 0 0 
+0 0 3 0 8 0 9 1 0 
+0 0 5 4 0 0 0 0 0 
+6 0 0 0 0 7 4 3 0 
+9 5 0 0 0 6 0 0 0 
+0 0 0 0 0 0 0 4 0 
+0 3 0 0 0 0 0 0 2 
+
+"Setting row constraints..."
+"Setting column constraints..."
+"Setting box constraints..."
+"Board is valid if no contradictions were shown"
+;  ... done
+;... done
+
+
+
+
+;puzzle2 output
+"Board"
+0 0 3 0 2 0 6 0 0 
+9 0 0 3 0 5 0 0 1 
+0 0 1 8 0 6 4 0 0 
+0 0 8 1 0 2 9 0 0 
+7 0 0 0 0 0 0 0 8 
+0 0 6 7 0 8 2 0 0 
+0 0 2 6 0 9 5 0 0 
+8 0 0 2 0 3 0 5 9 
+0 0 5 0 1 0 3 0 0 
+
+"Setting row constraints..."
+"Setting column constraints..."
+"Setting box constraints..."
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+"Board is valid if no contradictions were shown"
+;  ... done
+;... done
+
+
+
+
+;puzzle3 output
+"Board"
+8 5 2 3 4 1 6 7 8 
+6 7 9 8 2 5 1 4 3 
+4 3 1 6 7 9 5 8 2 
+3 2 4 1 5 7 9 6 8 
+9 8 6 2 3 4 7 5 1 
+7 1 5 9 8 6 2 3 4 
+1 6 8 5 9 3 4 2 7 
+2 9 7 4 6 8 3 1 5 
+5 4 3 7 1 2 8 9 0 
+
+"Setting row constraints..."
+"Setting column constraints..."
+"Setting box constraints..."
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+(contradiction (checker-val))
+"Board is valid if no contradictions were shown"
+|#
