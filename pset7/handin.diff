@@ -1,0 +1,647 @@
+diff --git a/pset7/7-1.scm b/pset7/7-1.scm
+index e69de29..8ff73a5 100644
+--- a/pset7/7-1.scm
++++ b/pset7/7-1.scm
+@@ -0,0 +1,136 @@
++(define (cell-name name property)
++  (symbol name '- property))
++
++
++(define (add-living-beyond-means name)
++  (let ((cell-name (cell-name name 'living-beyond-means)))
++    (define-cell cell-name)
++    (eq-put! name 'living-beyond-means cell-name)
++    (p:<
++      (e:interval-high (eq-get name 'income))
++      (e:interval-low (eq-get name 'expenses))
++      cell-name)))
++
++
++(define (add-profligate name)
++  (let ((cell-name (cell-name name 'profligate)))
++    (define-cell cell-name)
++    (eq-put! name 'profligate cell-name)
++    (p:and
++      (e:id (eq-get name 'living-beyond-means))
++      (e:or
++        (e:id ((eq-path '(upper-middle-class income)) name))
++        (e:id ((eq-path '(the-one-percent income)) name)))
++      cell-name)))
++
++
++(define (add-bmi name)
++  (let ((cell-name (cell-name name 'bmi)))
++    (define-cell cell-name)
++    (eq-put! name 'bmi cell-name)
++    (p:*
++      (e:/
++        (e:id (eq-get name 'weight))
++        (e:square (eq-get name 'height)))
++      703
++      cell-name)))
++
++
++(define (add-fat-cat name)
++  (let ((cell-name (cell-name name 'fat-cat)))
++    (define-cell cell-name)
++    (eq-put! name 'fat-cat cell-name)
++    (p:and
++      (e:id ((eq-path '(obese bmi)) name))
++      (e:id ((eq-path '(the-one-percent income)) name))
++      cell-name)))
++
++
++(define (attach-info names)
++  (for-each
++    (lambda (name)
++      (for-each
++        (lambda (property)
++          (let ((cell-name (cell-name name property)))
++            (define-cell cell-name)
++            (eq-put! name property cell-name)))
++        '(height weight income expenses))
++
++      ((c:bins
++        (named-ranges 'premise-height
++          `(short         ,(make-interval 0 69))
++          `(medium-height ,(make-interval 68 73))
++          `(tall          ,(make-interval 72 96))))
++        (eq-get name 'height))
++
++      ((c:bins
++        (named-ranges 'premise-weight
++          `(small         ,(make-interval 0 160))
++          `(medium-weight ,(make-interval 150 190))
++          `(large         ,(make-interval 180 1000))))
++        (eq-get name 'weight))
++
++      ((c:bins
++        (named-ranges 'premise-income
++          `(lower-class         ,(make-interval 0 16000))
++          `(working-class       ,(make-interval 16000 30000))
++          `(lower-middle-class  ,(make-interval 30000 100000))
++          `(upper-middle-class  ,(make-interval 100000 300000))
++          `(the-one-percent     ,(make-interval 300000 999999999999))))
++        (eq-get name 'income))
++
++      ((c:bins
++        (named-ranges 'premise-expense
++          `(below-average  ,(make-interval 0 18300))
++          `(above-average  ,(make-interval 18300 999999999999))))
++        (eq-get name 'expenses))
++
++      (add-living-beyond-means name)
++      (add-profligate name)
++      (add-bmi name)
++
++      ((c:bins
++        (named-ranges 'premise-bmi
++          `(underweight ,(make-interval 0 18.5))
++          `(normal      ,(make-interval 18.5 25))
++          `(overweight  ,(make-interval 25 30))
++          `(obese       ,(make-interval 30 99))))
++        (eq-get name 'bmi))
++
++      (add-fat-cat name))
++    names))
++
++
++(attach-info '(John Paul George Ringo))
++(tell! (eq-get 'John 'income) (make-interval 99999997 99999998) 'ncvc-estimate)
++(tell! (eq-get 'John 'expenses) (make-interval 99999999 999999999) 'ncvc-estimate)
++(tell! (eq-get 'John 'weight) (make-interval 240 250) 'ncvc-estimate)
++(tell! (eq-get 'John 'height) (make-interval 68 71) 'ncvc-estimate)
++
++#|
++;; Sample output
++1 ]=> (inquire (eq-get 'John 'profligate))
++;Value: #(value=#t,
++   premises=(premise-income ncvc-estimate),
++   informants=((and:p cell58 cell57)))
++
++1 ]=> (inquire (eq-get 'John 'living-beyond-means))
++;Value: #(value=#t,
++   premises=(ncvc-estimate),
++   informants=((<:p cell54 cell53)))
++
++1 ]=> (inquire (eq-get 'John 'bmi))
++;Value: #(value=#[interval 168720/5041 87875/2312],
++   premises=(ncvc-estimate),
++   informants=((*:p cell61 703)))
++
++1 ]=> (inquire ((eq-path '(obese bmi)) 'John))
++;Value: #(value=#t,
++   premises=(ncvc-estimate premise-bmi),
++   informants=((and:p cell83 cell81)))
++
++1 ]=> (inquire (eq-get 'John 'fat-cat))
++;Value: #(value=#t,
++   premises=(premise-income ncvc-estimate premise-bmi),
++   informants=((and:p cell85 cell84)))
++|#
+diff --git a/pset7/7-3.scm b/pset7/7-3.scm
+new file mode 100644
+index 0000000..a758289
+--- /dev/null
++++ b/pset7/7-3.scm
+@@ -0,0 +1,53 @@
++(initialize-scheduler)
++
++(make-financial-entity 'Alyssa)
++(make-financial-entity 'Ben)
++(make-financial-entity 'Harry)
++(make-financial-entity 'Eva)
++
++;;; Ben and Alyssa are married
++(make-financial-entity 'Ben-Alyssa)
++(combine-financial-entities 'Ben-Alyssa 'Ben 'Alyssa)
++;;; Ben and Alyssa file income tax jointly
++(tell! (gross-income 'Ben-Alyssa) 427000 'IRS)
++
++;;; Ben works at Gaggle as a software engineer.
++(breakdown (gross-income 'Ben) 'Gaggle-salary 'investments)
++;;; He gets paid alot to make good apps.
++(tell! (thing-of '(Gaggle-salary gross-income Ben)) 200000 'Gaggle)
++
++;;; Alyssa works as a PhD biochemist in big pharma.
++(breakdown (gross-income 'Alyssa) 'GeneScam-salary 'investments)
++;;; Biochemists are paid poorly.
++(tell! (thing-of '(GeneScam-salary gross-income Alyssa)) 70000 'GeneScam)
++(tell! (thing-of '(investments gross-income Alyssa))
++       (make-interval 30000 40000) 'Alyssa)
++
++;;; Ben is a tightwad
++(tell! (thing-of '(expenses Ben)) (make-interval 10000 20000) 'Ben)
++
++;;; But Alyssa is not cheap.  She likes luxury.
++(tell! (thing-of '(expenses Alyssa)) (make-interval 200000 215000) 'Alyssa)
++
++
++;;; Harry and Eva are married.
++(make-financial-entity 'Harry-Eva)
++(combine-financial-entities 'Harry-Eva 'Harry 'Eva)
++;;; Harry and Eva file income tax jointly
++(tell! (gross-income 'Harry-Eva) 2027000 'IRS)
++
++
++;;; Harry and Ben are members of a club
++(make-financial-entity 'Harry-Ben)
++(combine-financial-entities 'Harry-Ben 'Harry 'Ben)
++;;; The Harry and Ben have a joint membership, which varies by year
++(tell! (expenses 'Harry-Ben) (make-interval 5000 6000) 'membership-fees)
++
++
++;;; Everyone is part of a neighborhood where donations are used to improve the facilities. They pool together a decent chunk of cash each year
++(make-financial-entity 'All)
++(combine-financial-entities 'All 'Harry 'Eva 'Ben 'Alyssa)
++;;; The Harry and Ben have a joint membership, which varies by year
++(tell! (expenses 'All) (make-interval 10000 12000) 'donations)
++
++(pp (inquire (thing-of '(gross-income Eva))))
+diff --git a/pset7/7-4.scm b/pset7/7-4.scm
+new file mode 100644
+index 0000000..b9e19c7
+--- /dev/null
++++ b/pset7/7-4.scm
+@@ -0,0 +1,360 @@
++(define (range first last)
++  (if (>= first last)
++      '()
++      (cons first (range (+ first 1) last))))
++
++
++; Returns the index in the puzzle of the given coordinate
++(define (get-index x y)
++  (+ x (* 9 y)))
++
++
++; Restrict the given list of cells to ensure none of them have the same value
++(define (restrict-cells cells false-cell)
++  (for-each (lambda (i)
++      (for-each (lambda (j)
++          (c:eq? (ce:id (list-ref cells i)) (ce:id (list-ref cells j)) false-cell))
++        (range (+ i 1) 9)))
++    (range 0 8)))
++
++
++
++(define (->val cell)
++  (let ((val (vector-second (inquire cell))))
++    (if (number? val)
++      val
++      0)))
++
++; Display the board
++(define (display-board)
++  (for-each (lambda (y)
++      (for-each (lambda (x)
++          (display (->val (eq-get x y)))
++          (display " "))
++        (range 0 9))
++      (newline))
++    (range 0 9))
++  (newline))
++
++
++(define (validate-board)
++  (for-each (lambda (y)
++      (for-each (lambda (x)
++          (inquire (eq-get x y)))
++        (range 0 9)))
++    (range 0 9)))
++
++
++(define (sudoku-checker board)
++  (define-cell false-cell)
++  (tell! false-cell #f 'false-cell)
++
++  ; Fill in what we have initally
++  (for-each (lambda (x)
++      (for-each (lambda (y)
++          (let ((cell (symbol x y)))
++            (define-cell cell)
++            (let ((val (list-ref board (get-index x y))))
++              (if (= val 0)
++                (tell! cell (make-interval 1 9) 'checker-interval)
++                (tell! cell val 'checker-val)))
++            (eq-put! x y cell)))
++        (range 0 9)))
++    (range 0 9))
++
++  ; Display board
++  (newline)
++  (pp "Board")
++  (display-board)
++
++  (pp "Setting row constraints...")
++  (for-each (lambda (x)
++      (restrict-cells (map (lambda (y) (eq-get x y)) (range 0 9)) false-cell))
++    (range 0 9))
++
++  (pp "Setting column constraints...")
++  (for-each (lambda (y)
++      (restrict-cells (map (lambda (x) (eq-get x y)) (range 0 9)) false-cell))
++    (range 0 9))
++
++  (pp "Setting box constraints...")
++  (for-each (lambda (x1)
++      (for-each (lambda (y1)
++          (restrict-cells
++            (apply append
++              (map (lambda (x2)
++                  (map (lambda (y2)
++                      (eq-get (+ x2 (* x1 3)) (+ y2 (* y1 3))))
++                    (range 0 3)))
++                (range 0 3)))
++            false-cell))
++        (range 0 3)))
++    (range 0 3))
++
++  (validate-board)
++  (pp "Board is valid if no contradictions were shown"))
++
++
++(define puzzle1
++  (list
++    0 0 0 2 0 0 0 0 0 ; Board is valid
++    0 9 0 0 1 5 6 0 0
++    7 6 0 0 0 0 3 0 0
++    0 0 3 0 8 0 9 1 0
++    0 0 5 4 0 0 0 0 0
++    6 0 0 0 0 7 4 3 0
++    9 5 0 0 0 6 0 0 0
++    0 0 0 0 0 0 0 4 0
++    0 3 0 0 0 0 0 0 2))
++
++(define puzzle2
++  (list
++    0 0 3 0 2 0 6 0 0
++    9 0 0 3 0 5 0 0 1
++    0 0 1 8 0 6 4 0 0
++    0 0 8 1 0 2 9 0 0
++    7 0 0 0 0 0 0 0 8
++    0 0 6 7 0 8 2 0 0
++    0 0 2 6 0 9 5 0 0
++    8 0 0 2 0 3 0 5 9 ; <-- 5 is a contradiction
++    0 0 5 0 1 0 3 0 0))
++
++(define puzzle3
++  (list
++    8 5 2 3 4 1 6 7 8 ; <-- 8 is a contradiction
++    6 7 9 8 2 5 1 4 3
++    4 3 1 6 7 9 5 8 2
++    3 2 4 1 5 7 9 6 8
++    9 8 6 2 3 4 7 5 1
++    7 1 5 9 8 6 2 3 4
++    1 6 8 5 9 3 4 2 7
++    2 9 7 4 6 8 3 1 5
++    5 4 3 7 1 2 8 9 0))
++
++
++(sudoku-checker puzzle3)
++
++#|
++;puzzle1 output
++"Board"
++0 0 0 2 0 0 0 0 0 
++0 9 0 0 1 5 6 0 0 
++7 6 0 0 0 0 3 0 0 
++0 0 3 0 8 0 9 1 0 
++0 0 5 4 0 0 0 0 0 
++6 0 0 0 0 7 4 3 0 
++9 5 0 0 0 6 0 0 0 
++0 0 0 0 0 0 0 4 0 
++0 3 0 0 0 0 0 0 2 
++
++"Setting row constraints..."
++"Setting column constraints..."
++"Setting box constraints..."
++"Board is valid if no contradictions were shown"
++;  ... done
++;... done
++
++
++
++
++;puzzle2 output
++"Board"
++0 0 3 0 2 0 6 0 0 
++9 0 0 3 0 5 0 0 1 
++0 0 1 8 0 6 4 0 0 
++0 0 8 1 0 2 9 0 0 
++7 0 0 0 0 0 0 0 8 
++0 0 6 7 0 8 2 0 0 
++0 0 2 6 0 9 5 0 0 
++8 0 0 2 0 3 0 5 9 
++0 0 5 0 1 0 3 0 0 
++
++"Setting row constraints..."
++"Setting column constraints..."
++"Setting box constraints..."
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++"Board is valid if no contradictions were shown"
++;  ... done
++;... done
++
++
++
++
++;puzzle3 output
++"Board"
++8 5 2 3 4 1 6 7 8 
++6 7 9 8 2 5 1 4 3 
++4 3 1 6 7 9 5 8 2 
++3 2 4 1 5 7 9 6 8 
++9 8 6 2 3 4 7 5 1 
++7 1 5 9 8 6 2 3 4 
++1 6 8 5 9 3 4 2 7 
++2 9 7 4 6 8 3 1 5 
++5 4 3 7 1 2 8 9 0 
++
++"Setting row constraints..."
++"Setting column constraints..."
++"Setting box constraints..."
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++(contradiction (checker-val))
++"Board is valid if no contradictions were shown"
++|#
+diff --git a/pset7/family.scm b/pset7/family.scm
+index e09df2d..49dba7c 100644
+--- a/pset7/family.scm
++++ b/pset7/family.scm
+@@ -62,28 +62,56 @@
+   (eq-get entity 'expenses))
+ 
+ (define (breakdown sum-node . part-names)
+-  (for-each (lambda (part-name)
+-	      (let-cell part
+-			(add-branch! sum-node part part-name)))
+-	    part-names)
+-  (cond ((= (length part-names) 2)
+-	 (c:+ (eq-get sum-node (car part-names))
+-	      (eq-get sum-node (cadr part-names))
+-	      sum-node)
+-	 'done)
+-	(else
+-	 (error "I don't know how to sum multiple parts"))))
+-	      
++  (for-each
++    (lambda (part-name)
++      (let-cell part
++        (add-branch! sum-node part part-name)))
++    part-names)
++  (c:id
++    (let lp ((names part-names))
++      (ce:+
++        (eq-get sum-node (car names))
++        (cond
++          ((= (length names) 2)
++            (eq-get sum-node (cadr names)))
++          (else
++            (lp (cdr names))))))
++    sum-node)
++  'done)
++
+ (define (combine-financial-entities compound . parts)
+   (assert (every financial-entity? parts))
+-  (cond ((= (length parts) 2)
+-	 (let ((p1 (car parts)) (p2 (cadr parts)))
+-	   (c:+ (gross-income p1) (gross-income p2) (gross-income compound))
+-	   (c:+ (net-income p1) (net-income p2) (net-income compound))
+-	   (c:+ (expenses p1) (expenses p2) (expenses compound))
+-	   'done))
+-	(else
+-	 (error "I don't know how to combine multiple parts"))))
++  (c:id
++    (let lp ((p parts))
++      (ce:+
++        (gross-income (car p))
++        (cond
++          ((= (length p) 2)
++            (gross-income (cadr p)))
++          (else
++            (lp (cdr p))))))
++    (gross-income compound))
++  (c:id
++    (let lp ((p parts))
++      (ce:+
++        (net-income (car p))
++        (cond
++          ((= (length p) 2)
++            (net-income (cadr p)))
++          (else
++            (lp (cdr p))))))
++    (net-income compound))
++  (c:id
++    (let lp ((p parts))
++      (ce:+
++        (expenses (car p))
++        (cond
++          ((= (length p) 2)
++            (expenses (cadr p)))
++          (else
++            (lp (cdr p))))))
++    (expenses compound))
++  'done)
+ 
+ #|
+ (initialize-scheduler)
