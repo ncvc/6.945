@@ -62,28 +62,56 @@
   (eq-get entity 'expenses))
 
 (define (breakdown sum-node . part-names)
-  (for-each (lambda (part-name)
-	      (let-cell part
-			(add-branch! sum-node part part-name)))
-	    part-names)
-  (cond ((= (length part-names) 2)
-	 (c:+ (eq-get sum-node (car part-names))
-	      (eq-get sum-node (cadr part-names))
-	      sum-node)
-	 'done)
-	(else
-	 (error "I don't know how to sum multiple parts"))))
-	      
+  (for-each
+    (lambda (part-name)
+      (let-cell part
+        (add-branch! sum-node part part-name)))
+    part-names)
+  (c:id
+    (let lp ((names part-names))
+      (ce:+
+        (eq-get sum-node (car names))
+        (cond
+          ((= (length names) 2)
+            (eq-get sum-node (cadr names)))
+          (else
+            (lp (cdr names))))))
+    sum-node)
+  'done)
+
 (define (combine-financial-entities compound . parts)
   (assert (every financial-entity? parts))
-  (cond ((= (length parts) 2)
-	 (let ((p1 (car parts)) (p2 (cadr parts)))
-	   (c:+ (gross-income p1) (gross-income p2) (gross-income compound))
-	   (c:+ (net-income p1) (net-income p2) (net-income compound))
-	   (c:+ (expenses p1) (expenses p2) (expenses compound))
-	   'done))
-	(else
-	 (error "I don't know how to combine multiple parts"))))
+  (c:id
+    (let lp ((p parts))
+      (ce:+
+        (gross-income (car p))
+        (cond
+          ((= (length p) 2)
+            (gross-income (cadr p)))
+          (else
+            (lp (cdr p))))))
+    (gross-income compound))
+  (c:id
+    (let lp ((p parts))
+      (ce:+
+        (net-income (car p))
+        (cond
+          ((= (length p) 2)
+            (net-income (cadr p)))
+          (else
+            (lp (cdr p))))))
+    (net-income compound))
+  (c:id
+    (let lp ((p parts))
+      (ce:+
+        (expenses (car p))
+        (cond
+          ((= (length p) 2)
+            (expenses (cadr p)))
+          (else
+            (lp (cdr p))))))
+    (expenses compound))
+  'done)
 
 #|
 (initialize-scheduler)
@@ -135,4 +163,3 @@
 ;;; Notice that this conclusion does not depend on the details, such
 ;;; as Gaggle or GeneScam!
 |#
-
