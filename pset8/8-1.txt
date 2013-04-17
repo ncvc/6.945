@@ -1,0 +1,3 @@
+Time Complexity: O(M + N^2), where N is the length of the fringe, and M is the number of nodes. The algorithm has to iterate through all nodes in the tree, and must append the fringe list on each iteration. Since the append procedure is a O(N) algorithm, the total time spent on append is upper-bounded by the number of items in the fringe list.
+
+Space Complexity: If the procedure is tail-call optimized, then the algorithm needs O(N) space, where N is the length of the fringe, because it needs to store each fringe node. Otherwise, the space complexity is O(M), where M is the number of nodes, since it must save the stack for each recursive call. I believe that it cannot be TCO'd since append must be called after the recursive calls, but I am unsure.
