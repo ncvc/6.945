@@ -1,0 +1,1 @@
+If the function returned resume-thunk, each time f1 or f2 is called, the code (walk tree (lambda () *done*)) would be run. However, since coroutine-fringe-generator set!s resume-thunk to continue, the next time f1 or f2 is called, the most recent continue will be called, instead of the original - (walk tree (lambda () *done*)) - resume-thunk.
