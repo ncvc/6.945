@@ -5,6 +5,6 @@
 (load "conspire")
 (load "try-two-ways")
 
-(load "8-2")
+(load "8-5")
 
 ':have-fun!
