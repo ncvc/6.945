@@ -228,10 +228,8 @@
 
 (define (acs-coroutine-same-fringe? tree1 tree2)
   (let ((f1 (make-coroutine (acs-coroutine-fringe-generator tree1)))
-    (f2 (make-coroutine (acs-coroutine-fringe-generator tree2))))
+	(f2 (make-coroutine (acs-coroutine-fringe-generator tree2))))
     (let lp ((x1 (f1)) (x2 (f2)))
-        (pp x1)
-        (pp x2)
       (cond ((and (eq? x1 *done*) (eq? x2 *done*)) #t)
 	    ((or  (eq? x1 *done*) (eq? x2 *done*)) #f)
 	    ((eq? x1 x2) (lp (f1) (f2)))
@@ -250,8 +248,7 @@
 
     (define (initial-generation-coroutine-thunk)
       (lp tree)
-      *done*)
-      ; (return *done*))
+      (return *done*))
 
     initial-generation-coroutine-thunk))
 
