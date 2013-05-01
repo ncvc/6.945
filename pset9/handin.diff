@@ -1,0 +1,292 @@
+diff --git a/pset9/9-1.txt b/pset9/9-1.txt
+new file mode 100644
+index 0000000..cbed94e
+--- /dev/null
++++ b/pset9/9-1.txt
+@@ -0,0 +1 @@
++After calling (foo 10), it calls (iter 'a 10) followed by (iter 'b 10). Each of these calls simply initialize a function to be called when there is an input on its queue, then places the value 10 on each input queue. The order in which the 'a queue is consumed is not related to the order the 'b queue is consumed (consumption is asynchronous). Thus, the schedulers (both in our interpreter and the one on the host OS) effectively determine the order of the output. It should be noted that only looking at the output of 'a (and similarly for 'b) results in the expected ordering, as a new item is added to the queue only when the previous one is consumed.
+diff --git a/pset9/9-2.txt b/pset9/9-2.txt
+new file mode 100644
+index 0000000..ec787a2
+--- /dev/null
++++ b/pset9/9-2.txt
+@@ -0,0 +1,4 @@
++a. I do not believe this would be a good choice. It would be extremely confusing to write code in this manner, as we would have to prevent concurrency issues from occurring even when providing parameters to an alpha expression.
++For instance, suppose we first called some alpha expression, passing parameter x. Then we modified x later in the procedure to call the same alpha expression with this updated value. We would have no way of knowing if the expression will be called with the initial value of x followed by the updated value, or if the expression will be called twice with the same updated value of x. This nondeterminism at the mercy of the scheduler would make programming with alpha expressions much more difficult than necesssary.
++
++c. Yes, this could be useful if the alpha expression must be run on the most recent available data (at the time it is actually being run). This could allow the program to queue up a large number of potentially expensive computations (passing beta functions as parameters to alpha functions) at once and be guaranteed that each alpha subroutine will be run just after its parameters are evaluated.
+diff --git a/pset9/9-3.txt b/pset9/9-3.txt
+new file mode 100644
+index 0000000..ecd5a92
+--- /dev/null
++++ b/pset9/9-3.txt
+@@ -0,0 +1,31 @@
++double-check-lock executes the check procedure and executes do if true and if-not otherwise. These steps are atomic.
++
++It is used in define-variable! to ensure that two functions executing define-variable! concurrently (and that share an env) do not interfere with each other. If this check were not present, then Procedure A could update the vars portion of env, hand off control to Procedure B, which could then update both the vars and vals portions of env. Procedure A would then regain control and update the vals portion of env. The result would be as follows:
++
++Procedure A - (define a 0)
++Procedure B - (define b 0)
++
++
++    Env
++vars    vals
++------------------------------------------------------------
++null    null       Initial state
++
++------------------------------------------------------------
++
++a       null       Procedure A updates vars
++
++------------------------------------------------------------
++
++a       null       Procedure B takes over and updates vars
++b
++
++------------------------------------------------------------
++
++a       1          Procedure B updates vals
++b
++
++------------------------------------------------------------
++
++a       1          Procedure A takes over and updates vals (a and b values are switched!!)
++b       0
+diff --git a/pset9/9-4.txt b/pset9/9-4.txt
+new file mode 100644
+index 0000000..20f53ae
+--- /dev/null
++++ b/pset9/9-4.txt
+@@ -0,0 +1,141 @@
++I would expect fib2 to perform better, since it uses a direct callback to check-if-done, which is only executed twice per call to fib2. fib1, on the other hand, continuously calls wait-for-xy, polling constantly to check if it can return, resulting in the waste of many CPU cycles.
++
++
++
++The instrumentation added to the run procedure prints the list of tasks and the sizes of each task queue (output below). fib1 creates many more tasks because each time it is called, it redefines wait-for-xy. Thus each "1" in the output list represents a defined wait-for-xy, and the numbers of tasks with queue size 1 corresponds to the number of uncompleted fib1 calls. The larger number (after cont) corresponds to the fib1 task itself, which is called recursively, causing its queue size to grow.
++
++On the other hand, fib2 is pretty straight forward, in that it doesn't create a bunch of unnecessary tasks to monitor whether the recursive calls have finished. This is why fib2 is so much more efficient - it doesn't keep adding to its task list, so it requires a smaller number of run calls.
++
++
++(fib1 5 pp)
++(run (cont))
++(run (2 1))
++(run (1 cont 1))
++(run (cont 3 1))
++(run (3 1 1))
++(run (1 1 cont 2))
++(run (1 cont 4 1))
++(run (cont 4 1 1))
++(run (4 1 1 1))
++(run (1 1 1 cont 3))
++(run (1 1 cont 5 1))
++(run (1 cont 5 1 1))
++(run (cont 5 1 1 1))
++(run (5 1 1 1 1))
++(run (1 1 1 1 cont 4))
++(run (1 1 1 cont 6 1))
++(run (1 1 cont 6 1 1))
++(run (1 cont 6 1 1 1))
++(run (cont 6 1 1 1 1))
++(run (6 1 1 1 1 1))
++(run (1 1 1 1 1 cont 5))
++(run (1 1 1 1 cont 7 1))
++(run (1 1 1 cont 7 1 1))
++(run (1 1 cont 7 1 1 1))
++(run (1 cont 7 1 1 1 1))
++(run (cont 7 1 1 1 1 1))
++(run (7 1 1 1 1 1 1))
++(run (1 1 1 1 1 1 cont 6))
++(run (1 1 1 1 1 cont 6))
++(run (1 1 1 1 cont 6 1))
++(run (1 1 1 cont 6 1 1))
++(run (1 1 cont 6 1 1 1))
++(run (1 cont 6 1 1 1 1))
++(run (cont 6 1 1 1 1 1))
++(run (6 1 1 1 1 1 1))
++(run (1 1 1 1 1 1 cont 5))
++(run (1 1 1 1 1 cont 7 1))
++(run (1 1 1 1 cont 7 1 1))
++(run (1 1 1 cont 7 1 1 1))
++(run (1 1 cont 7 1 1 1 1))
++(run (1 cont 7 1 1 1 1 1))
++(run (cont 7 1 1 1 1 1 1))
++(run (7 1 1 1 1 1 1 1))
++(run (1 1 1 1 1 1 1 cont 6))
++(run (1 1 1 1 1 1 cont 6))
++(run (1 1 1 1 1 cont 6 1))
++(run (1 1 1 1 cont 6 1 1))
++(run (1 1 1 cont 6 1 1 1))
++(run (1 1 cont 6 1 1 1 1))
++(run (1 cont 6 1 1 1 1 1))
++(run (cont 6 1 1 1 1 1 1))
++(run (6 1 1 1 1 1 1 1))
++(run (1 1 1 1 1 1 1 cont 5))
++(run (1 1 1 1 1 1 cont 5))
++(run (1 1 1 1 1 cont 5 1))
++(run (1 1 1 1 cont 5 1 1))
++(run (1 1 1 cont 5 1 1 1))
++(run (1 1 cont 5 1 1 1 1))
++(run (1 cont 5 1 1 1 1 1))
++(run (cont 5 1 1 1 1 1 1))
++(run (5 1 1 1 1 1 1 1))
++(run (1 1 1 1 1 1 1 cont 4))
++(run (1 1 1 1 1 1 cont 4))
++(run (1 1 1 1 1 cont 4 1))
++(run (1 1 1 1 cont 4 1 1))
++(run (1 1 1 cont 4 1 1))
++(run (1 1 cont 4 1 1 1))
++(run (1 cont 4 1 1 1 1))
++(run (cont 4 1 1 1 1 1))
++(run (4 1 1 1 1 1 1))
++(run (1 1 1 1 1 1 cont 3))
++(run (1 1 1 1 1 cont 3))
++(run (1 1 1 1 cont 3 1))
++(run (1 1 1 cont 3 1 1))
++(run (1 1 cont 3 1 1 1))
++(run (1 cont 3 1 1 1 1))
++(run (cont 3 1 1 1 1 1))
++(run (3 1 1 1 1 1 1))
++(run (1 1 1 1 1 1 cont 2))
++(run (1 1 1 1 1 cont 2))
++(run (1 1 1 1 cont 2 1))
++(run (1 1 1 cont 2 1))
++(run (1 1 cont 2 1 1))
++(run (1 cont 2 1 1))
++(run (cont 2 1 1 1))
++(run (2 1 1 1 1))
++(run (1 1 1 1 cont 1))
++(run (1 1 1 cont 1))
++(run (1 1 cont 1 1))
++(run (1 cont 1 1 1))
++(run (cont 1 1 1 1))
++(run (1 1 1 1 1))
++(run (1 1 1 1 cont))
++(run (1 1 1 cont))
++(run (1 1 cont))
++(run (1 cont))
++(run (cont))
++5
++
++
++(fib2 5 pp)
++(run (cont))
++(run (2))
++(run (cont 1))
++(run (3))
++(run (cont 2))
++(run (4))
++(run (cont 3))
++(run (5))
++(run (cont 4))
++(run (6))
++(run (cont 5))
++(run (7))
++(run (cont 6))
++(run (6))
++(run (cont 5))
++(run (7))
++(run (cont 6))
++(run (6))
++(run (cont 5))
++(run (5))
++(run (cont 4))
++(run (4))
++(run (cont 3))
++(run (3))
++(run (cont 2))
++(run (2))
++(run (cont 1))
++(run (1))
++(run (cont))
++5
+\ No newline at end of file
+diff --git a/pset9/futures.scm b/pset9/futures.scm
+new file mode 100644
+index 0000000..7367593
+--- /dev/null
++++ b/pset9/futures.scm
+@@ -0,0 +1,52 @@
++(define-record-type future-record
++  (make-future-record cont done callbacks)
++  future?
++  (cont      future-cont      set-future-cont!)
++  (done      future-done      set-future-done!)
++  (val       future-val       set-future-val!)
++  (callbacks future-callbacks set-future-callbacks!))
++
++#|
++;; The original implementation did not use a list of future callbacks, opting instead for a single future callback per record. This made it so that only the most recent wait callback would be called until the future was finished.
++(define (future procedure)
++  (let ((record (make-future-record procedure #f '())))
++    (define (new-callback val)
++      (set-future-val! record val)
++      (set-future-done! record #t)
++      (for-each (lambda (callback) (callback)) (future-callbacks record)))
++
++    (define do-it (alpha ()
++      ((future-cont record) new-callback)))
++    (do-it)
++    record))
++
++
++(define (wait future callback)
++  (define (do-callback)
++    (callback (future-val future)))
++
++  (atomically (lambda()
++    (if (future-done future)
++      (do-callback)
++      (set-future-callbacks! future (cons do-callback (future-callbacks future))))))))
++
++
++(define fib
++  (alpha (n c)
++    (if (< n 2)
++      (c n)
++      (let ((xp (future (lambda (k) (fib (- n 1) k))))
++            (yp (future (lambda (k) (fib (- n 2) k)))))
++        (wait xp 
++          (lambda (x)
++            (wait yp
++              (lambda (y)
++                (c (+ x y))))))))))
++
++
++(define (test-multi-wait)
++  (let ((x (future (lambda (k) (k 1)))))
++    (wait x (lambda (val) (pp val)))
++    (wait x (lambda (val) (pp val)))
++    (wait x (lambda (val) (pp val)))))
++|#
+diff --git a/pset9/interp-actor.scm b/pset9/interp-actor.scm
+index 1ad484c..2ba30ed 100644
+--- a/pset9/interp-actor.scm
++++ b/pset9/interp-actor.scm
+@@ -164,26 +164,50 @@
++;;; 9.2.b
++; (defhandler apply
++;   (lambda (actor operands calling-environment)
++;     (if (not (= (length (actor-parameters actor))
++;     (length operands)))
++;   (error "Wrong number of operands supplied"))
++;     (let ((arguments (lambda ()
++;      (map (lambda (parameter operand)
++;       (evaluate-procedure-operand parameter
++;                 operand
++;                 calling-environment))
++;     (actor-parameters actor)
++;     operands))))
++;       (add-to-tasks! actor
++;          (lambda ()
++;            (eval (actor-body actor)
++;            (extend-environment
++;             (map procedure-parameter-name
++;            (actor-parameters actor))
++;             (arguments)
++;             (actor-environment actor)))))
++;       'actor-applied))
++;   actor-procedure?)
++
+ 
+ (define evaluate-procedure-operand
+   (make-generic-operator 3
