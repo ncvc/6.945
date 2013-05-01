@@ -161,52 +161,52 @@
 	     (procedure-environment procedure)))))
   compound-procedure?)
 
-; (defhandler apply
-;   (lambda (actor operands calling-environment)
-;     (if (not (= (length (actor-parameters actor))
-;     (length operands)))
-;   (error "Wrong number of operands supplied"))
-;     (let ((arguments
-;      (map (lambda (parameter operand)
-;       (evaluate-procedure-operand parameter
-;                 operand
-;                 calling-environment))
-;     (actor-parameters actor)
-;     operands)))
-;       (add-to-tasks! actor
-;          (lambda ()
-;            (eval (actor-body actor)
-;            (extend-environment
-;             (map procedure-parameter-name
-;            (actor-parameters actor))
-;             arguments
-;             (actor-environment actor)))))
-;       'actor-applied))
-;   actor-procedure?)
-
-;;; 9.2.b
 (defhandler apply
   (lambda (actor operands calling-environment)
     (if (not (= (length (actor-parameters actor))
     (length operands)))
   (error "Wrong number of operands supplied"))
-    (let ((arguments (lambda ()
+    (let ((arguments
      (map (lambda (parameter operand)
       (evaluate-procedure-operand parameter
                 operand
                 calling-environment))
     (actor-parameters actor)
-    operands))))
+    operands)))
       (add-to-tasks! actor
          (lambda ()
            (eval (actor-body actor)
            (extend-environment
             (map procedure-parameter-name
            (actor-parameters actor))
-            (arguments)
+            arguments
             (actor-environment actor)))))
       'actor-applied))
   actor-procedure?)
+
+;;; 9.2.b
+; (defhandler apply
+;   (lambda (actor operands calling-environment)
+;     (if (not (= (length (actor-parameters actor))
+;     (length operands)))
+;   (error "Wrong number of operands supplied"))
+;     (let ((arguments (lambda ()
+;      (map (lambda (parameter operand)
+;       (evaluate-procedure-operand parameter
+;                 operand
+;                 calling-environment))
+;     (actor-parameters actor)
+;     operands))))
+;       (add-to-tasks! actor
+;          (lambda ()
+;            (eval (actor-body actor)
+;            (extend-environment
+;             (map procedure-parameter-name
+;            (actor-parameters actor))
+;             (arguments)
+;             (actor-environment actor)))))
+;       'actor-applied))
+;   actor-procedure?)
 
 
 (define evaluate-procedure-operand
