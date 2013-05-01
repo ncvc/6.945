@@ -16,7 +16,7 @@
 (load "interp-actor" generic-evaluation-environment)
 (load "repl" generic-evaluation-environment)
 
-(load "promises" user-initial-environment)
+; (load "promises" user-initial-environment)
 
 ;; 
 
