@@ -1,0 +1,7 @@
+a. I do not believe this would be a good choice. It would be extremely confusing to write code in this manner, as we would have to prevent concurrency issues from occurring even when providing parameters to an alpha expression.
+For instance, suppose we first called some alpha expression, passing parameter x. Then we modified x later in the procedure to call the same alpha expression with this updated value. We would have no way of knowing if the expression will be called with the initial value of x followed by the updated value, or if the expression will be called twice with the same updated value of x. This nondeterminism at the mercy of the scheduler would make programming with alpha expressions much more difficult than necesssary.
+
+b.sadf
+
+
+c. Yes, this could be useful if the alpha expression must be run on the most recent available data (at the time it is actually being run). This could allow the program to queue up a large number of potentially expensive computations (passing beta functions as parameters to alpha functions) at once and be guaranteed that each alpha subroutine will be run just after its parameters are evaluated.
