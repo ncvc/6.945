@@ -1,0 +1,31 @@
+double-check-lock executes the check procedure and executes do if true and if-not otherwise. These steps are atomic.
+
+It is used in define-variable! to ensure that two functions executing define-variable! concurrently (and that share an env) do not interfere with each other. If this check were not present, then Procedure A could update the vars portion of env, hand off control to Procedure B, which could then update both the vars and vals portions of env. Procedure A would then regain control and update the vals portion of env. The result would be as follows:
+
+Procedure A - (define a 0)
+Procedure B - (define b 0)
+
+
+    Env
+vars    vals
+------------------------------------------------------------
+null    null       Initial state
+
+------------------------------------------------------------
+
+a       null       Procedure A updates vars
+
+------------------------------------------------------------
+
+a       null       Procedure B takes over and updates vars
+b
+
+------------------------------------------------------------
+
+a       1          Procedure B updates vals
+b
+
+------------------------------------------------------------
+
+a       1          Procedure A takes over and updates vals (a and b values are switched!!)
+b       0
